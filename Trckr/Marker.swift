@@ -10,6 +10,7 @@ import Foundation
 
 class Marker {
     
+    var address: String?
     var id: String?
     var size: String?
     var contents: String?
@@ -20,7 +21,8 @@ class Marker {
     
     init(){
     }
-    init(id: String, size: String, contents: String, dropoff: String, pickup: String, lat: String, lon: String){
+    init(address: String, id: String, size: String, contents: String, dropoff: String, pickup: String, lat: String, lon: String){
+        self.address = address
         self.id = id
         self.size = size
         self.contents = contents
