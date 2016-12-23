@@ -67,16 +67,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
         self.view.addSubview(deleteMarkerButton)
         self.view.addSubview(filterButton)
         
-        
-        
-        
         apiCall.getLocations{
             locations in
             for location: Marker in locations
             {
                 let marker = GMSMarker()
                 marker.position = CLLocationCoordinate2DMake(Double(location.lat!)!, Double(location.lon!)!)
-                marker.title = location.id! + "\t" + location.contents! + "\t" + location.dropoff! + "\t" + location.pickup!
+                marker.title = location.address! + "\t" + location.id! + "\t" + location.contents! + "\t" + location.dropoff! + "\t" + location.pickup! + "\t" + location.size!
                 switch location.size!{
                 case "0":
                     marker.icon = GMSMarker.markerImageWithColor(UIColor.whiteColor())
@@ -84,6 +81,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
                     marker.icon = GMSMarker.markerImageWithColor(UIColor.yellowColor())
                 case "2":
                     marker.icon = GMSMarker.markerImageWithColor(UIColor.blueColor())
+                case "3":
+                    marker.icon = GMSMarker.markerImageWithColor(UIColor.orangeColor())
+                case "4":
+                    marker.icon = GMSMarker.markerImageWithColor(UIColor.blackColor())
+                case "5":
+                    marker.icon = GMSMarker.markerImageWithColor(UIColor.cyanColor())
                 default:
                     marker.icon = GMSMarker.markerImageWithColor(UIColor.redColor())
 
@@ -118,22 +121,53 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
     func mapView(mapView: GMSMapView, markerInfoWindow marker: GMSMarker) -> UIView? {
         let infoWindow: InfoWindowView = NSBundle.mainBundle().loadNibNamed("InfoWindowView", owner: self, options: nil).first! as! InfoWindowView
         var titleElements = marker.title?.characters.split{$0 == "\t"}.map(String.init)
-        infoWindow.assignedId.text = titleElements![0]
-        infoWindow.assignedContents.text = titleElements![1]
-        infoWindow.assignedDropoff.text = titleElements![2]
-        if titleElements![3] == "0"{
+        print (titleElements)
+        infoWindow.assignedAddress.text = titleElements![0]
+        infoWindow.assignedId.text = titleElements![1]
+        infoWindow.assignedContents.text = titleElements![2]
+        infoWindow.assignedDropoff.text = titleElements![3]
+        if titleElements![4] == "0"{
             infoWindow.assignedPickup.text = "✖️"
         }
         else {
             infoWindow.assignedPickup.text = "✔️"
         }
+        if let size = titleElements?[5]{
+            switch size {
+            case "0":
+                infoWindow.assignedSize.text = "10yd"
+                break
+            case "1":
+                infoWindow.assignedSize.text = "12yd"
+                break
+            case "2":
+                infoWindow.assignedSize.text = "20yd"
+                break
+            case "3":
+                infoWindow.assignedSize.text = "30yd"
+                break
+            case "4":
+                infoWindow.assignedSize.text = "40yd"
+                break
+            case "5":
+                infoWindow.assignedSize.text = "50yd"
+                break
+            default:
+                infoWindow.assignedSize.text = "N/A"
+                break
+            }
+        }
+        else {
+            infoWindow.assignedSize.text = "N/A"
+        }
+        
         return infoWindow
     }
     
     func mapView(mapView: GMSMapView, didLongPressAtCoordinate coordinate: CLLocationCoordinate2D) {
         let newMarker = GMSMarker()
         newMarker.position = CLLocationCoordinate2DMake(coordinate.latitude, coordinate.longitude)
-        newMarker.title = "input id" + "\t" + "input contents" + "\t" + "input dropoff" + "\t" + "input pickup"
+        newMarker.title = "input address" + "\t" + "input id" + "\t" + "input contents" + "\t" + "input dropoff" + "\t" + "input pickup" + "\t" + "input size"
         newMarker.map = mapView
         currentMarker = newMarker
     }
@@ -263,16 +297,17 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
                     bvc.lat = currentMarker.position.latitude
                     bvc.lon = currentMarker.position.longitude
                     let titleElements = currentMarker.title?.characters.split{$0 == "\t"}.map(String.init)
-                    if titleElements![0] != "input id"
+                    if titleElements![0] != "input address"
                     {
                         bvc.isEdit = true
-                        bvc.editID = titleElements![0]
-                        bvc.editContents = titleElements![1]
+                        bvc.editAddress = titleElements![0]
+                        bvc.editID = titleElements![1]
+                        bvc.editContents = titleElements![2]
                         let dateFormatter = NSDateFormatter()
                         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
-                        let date = dateFormatter.dateFromString(titleElements![2])
+                        let date = dateFormatter.dateFromString(titleElements![3])
                         bvc.editDropoff = date!
-                        if titleElements![3] == "0"
+                        if titleElements![4] == "0"
                         {
                             bvc.editPickup = false
                         }
