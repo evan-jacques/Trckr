@@ -12,6 +12,9 @@ class InfoWindowView: UIView {
 
     @IBOutlet weak var assignedId: UILabel!
     
+    @IBOutlet weak var assignedAddress: UILabel!
+    
+    @IBOutlet weak var assignedSize: UILabel!
     @IBOutlet weak var assignedContents: UILabel!
     @IBOutlet weak var assignedDropoff: UILabel!
     @IBOutlet weak var assignedPickup: UILabel!
