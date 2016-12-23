@@ -19,6 +19,7 @@ class ApiCall {
         request.setValue("password", forHTTPHeaderField: "token")
         print(request.valueForHTTPHeaderField("Content-type"))
         
+        let address: String = location.address!
         let id: Int = Int(location.id!)!
         let size: Int = Int(location.size!)!
         let contents: String = location.contents!
@@ -29,6 +30,7 @@ class ApiCall {
         
         let jsonObject: AnyObject =
             [
+                "address": address,
                 "id": id,
                 "size": size,
                 "contents": contents,
@@ -82,13 +84,14 @@ class ApiCall {
                     if id == "1" {
                         continue
                     }
+                    let address = loc["address"] as! String
                     let size = loc["size"] as! String
                     let contents = loc["contents"] as! String
                     let pickup = loc["pickup"] as! String
                     let dropoff = loc["dropoff"] as! String
                     let lat = loc["lat"] as! String
                     let lon = loc["lon"] as! String
-                    let location = Marker(id: id,size: size,contents: contents,dropoff: dropoff,pickup: pickup,lat: lat,lon: lon)
+                    let location = Marker(address: address,id: id,size: size,contents: contents,dropoff: dropoff,pickup: pickup,lat: lat,lon: lon)
                     locations.append(location)
                 }
     
@@ -127,13 +130,14 @@ class ApiCall {
                     if id == "1" {
                         continue
                     }
+                    let address = loc["address"] as! String
                     let size = loc["size"] as! String
                     let contents = loc["contents"] as! String
                     let pickup = loc["pickup"] as! String
                     let dropoff = loc["dropoff"] as! String
                     let lat = loc["lat"] as! String
                     let lon = loc["lon"] as! String
-                    let location = Marker(id: id,size: size,contents: contents,dropoff: dropoff,pickup: pickup,lat: lat,lon: lon)
+                    let location = Marker(address: address,id: id,size: size,contents: contents,dropoff: dropoff,pickup: pickup,lat: lat,lon: lon)
                     locations.append(location)
                 }
                 
@@ -154,6 +158,7 @@ class ApiCall {
         request.setValue("password", forHTTPHeaderField: "token")
         print(request.valueForHTTPHeaderField("Content-type"))
         
+        let address: String = location.address!
         let size: Int = Int(location.size!)!
         let contents: String = location.contents!
         let dropoff: String = location.dropoff!
@@ -163,7 +168,7 @@ class ApiCall {
         
         let jsonObject: AnyObject =
         [
-
+            "address": address,
             "size": size,
             "contents": contents,
             "dropoff": dropoff,
