@@ -67,33 +67,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
         self.view.addSubview(deleteMarkerButton)
         self.view.addSubview(filterButton)
         
-        apiCall.getLocations{
-            locations in
-            for location: Marker in locations
-            {
-                let marker = GMSMarker()
-                marker.position = CLLocationCoordinate2DMake(Double(location.lat!)!, Double(location.lon!)!)
-                marker.title = location.address! + "\t" + location.id! + "\t" + location.contents! + "\t" + location.dropoff! + "\t" + location.pickup! + "\t" + location.size!
-                switch location.size!{
-                case "0":
-                    marker.icon = GMSMarker.markerImageWithColor(UIColor.whiteColor())
-                case "1":
-                    marker.icon = GMSMarker.markerImageWithColor(UIColor.yellowColor())
-                case "2":
-                    marker.icon = GMSMarker.markerImageWithColor(UIColor.blueColor())
-                case "3":
-                    marker.icon = GMSMarker.markerImageWithColor(UIColor.orangeColor())
-                case "4":
-                    marker.icon = GMSMarker.markerImageWithColor(UIColor.blackColor())
-                case "5":
-                    marker.icon = GMSMarker.markerImageWithColor(UIColor.cyanColor())
-                default:
-                    marker.icon = GMSMarker.markerImageWithColor(UIColor.redColor())
-
-                }
-                marker.map = mapView
-            }
-        }
+        updateLocations( mapView, filter: 0 )
     }
     
     override func viewDidLayoutSubviews() {
@@ -200,54 +174,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
         if !filtered{
             self.filtered = true
             self.filterButton.setTitle("Show All", forState: .Normal)
-            apiCall.getLocationsToPickup(){
-                locations in
-                for location: Marker in locations
-                {
-                    let marker = GMSMarker()
-                    marker.position = CLLocationCoordinate2DMake(Double(location.lat!)!, Double(location.lon!)!)
-                    marker.title = location.id! + "\t" + location.contents! + "\t" + location.dropoff! + "\t" + location.pickup!
-                    switch location.size!{
-                    case "0":
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.whiteColor())
-                    case "1":
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.yellowColor())
-                    case "2":
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.blueColor())
-                    default:
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.redColor())
-                        
-                    }
-                    marker.map = tempMapView
-                }
-                
-            }
+            updateLocations( tempMapView, filter: 1 )
         }
         else {
             self.filtered = false
             self.filterButton.setTitle("Filter", forState: .Normal)
-            apiCall.getLocations{
-                locations in
-                for location: Marker in locations
-                {
-                    let marker = GMSMarker()
-                    marker.position = CLLocationCoordinate2DMake(Double(location.lat!)!, Double(location.lon!)!)
-                    marker.title = location.id! + "\t" + location.contents! + "\t" + location.dropoff! + "\t" + location.pickup!
-                    switch location.size!{
-                    case "0":
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.whiteColor())
-                    case "1":
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.yellowColor())
-                    case "2":
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.blueColor())
-                    default:
-                        marker.icon = GMSMarker.markerImageWithColor(UIColor.redColor())
-                        
-                    }
-                    marker.map = tempMapView
-                }
-
-            }
+            updateLocations( tempMapView, filter: 0 )
         }
     }
     func deleteMarkerAction(sender: UIButton)
@@ -259,9 +191,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
         let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default) {
             UIAlertAction in
             let titleElements = self.currentMarker.title?.characters.split{$0 == "\t"}.map(String.init)
-            if titleElements![0] != "input id"
+            if titleElements![1] != "input id"
             {
-                let id = titleElements![0]
+                let id = titleElements![1]
                 self.apiCall.deleteLocation(id)
                 self.currentMarker.map = nil
             }
@@ -332,14 +264,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
         addMarkerButton.setTitleColor(UIColor.blackColor(), forState: .Normal)
         addMarkerButton.backgroundColor = UIColor.greenColor()
         addMarkerButton.tag = ADD_MARKER_TAG
-        addMarkerButton.addTarget(self, action: "addMarkerAction:", forControlEvents: .TouchDown)
+        addMarkerButton.addTarget(self, action: #selector(ViewController.addMarkerAction(_:)), forControlEvents: .TouchDown)
     }
     func editMarkerButtonSetup(){
         editMarkerButton.setTitle("Edit Marker", forState: .Normal)
         editMarkerButton.setTitleColor(UIColor.blackColor(), forState: .Normal)
         editMarkerButton.backgroundColor = UIColor.yellowColor()
         editMarkerButton.tag = EDIT_MARKER_TAG
-        editMarkerButton.addTarget(self, action: "editMarkerAction:", forControlEvents: .TouchDown)
+        editMarkerButton.addTarget(self, action: #selector(ViewController.editMarkerAction(_:)), forControlEvents: .TouchDown)
         editMarkerButton.hidden = true
     }
     func deleteMarkerButtonSetup(){
@@ -347,7 +279,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
         deleteMarkerButton.setTitleColor(UIColor.blackColor(), forState: .Normal)
         deleteMarkerButton.backgroundColor = UIColor.redColor()
         deleteMarkerButton.tag = DELETE_MARKER_TAG
-        deleteMarkerButton.addTarget(self, action: "deleteMarkerAction:", forControlEvents: .TouchDown)
+        deleteMarkerButton.addTarget(self, action: #selector(ViewController.deleteMarkerAction(_:)), forControlEvents: .TouchDown)
         deleteMarkerButton.hidden = true
     }
     func filterForPickupButtonSetup(){
@@ -355,7 +287,74 @@ class ViewController: UIViewController, CLLocationManagerDelegate, GMSMapViewDel
         filterButton.setTitleColor(UIColor.blackColor(), forState: .Normal)
         filterButton.backgroundColor = UIColor.whiteColor();
         filterButton.tag = FILTER_TAG
-        filterButton.addTarget(self, action: "filterAction:", forControlEvents: .TouchDown)
+        filterButton.addTarget(self, action: #selector(ViewController.filterAction(_:)), forControlEvents: .TouchDown)
     }
+    
+    func updateLocations(mapView: GMSMapView, filter: Int){
+        switch filter {
+        case 0:
+            apiCall.getLocations{
+                locations in
+                for location: Marker in locations
+                {
+                    let marker = GMSMarker()
+                    marker.position = CLLocationCoordinate2DMake(Double(location.lat!)!, Double(location.lon!)!)
+                    marker.title = location.address! + "\t" + location.id! + "\t" + location.contents! + "\t" + location.dropoff! + "\t" + location.pickup! + "\t" + location.size!
+                    switch location.size!{
+                    case "0":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.whiteColor())
+                    case "1":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.yellowColor())
+                    case "2":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.blueColor())
+                    case "3":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.orangeColor())
+                    case "4":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.blackColor())
+                    case "5":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.cyanColor())
+                    default:
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.redColor())
+                        
+                    }
+                    marker.map = mapView
+                }
+            }
+            break
+        case 1:
+            apiCall.getLocationsToPickup{
+                locations in
+                for location: Marker in locations
+                {
+                    let marker = GMSMarker()
+                    marker.position = CLLocationCoordinate2DMake(Double(location.lat!)!, Double(location.lon!)!)
+                    marker.title = location.address! + "\t" + location.id! + "\t" + location.contents! + "\t" + location.dropoff! + "\t" + location.pickup! + "\t" + location.size!
+                    switch location.size!{
+                    case "0":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.whiteColor())
+                    case "1":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.yellowColor())
+                    case "2":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.blueColor())
+                    case "3":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.orangeColor())
+                    case "4":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.blackColor())
+                    case "5":
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.cyanColor())
+                    default:
+                        marker.icon = GMSMarker.markerImageWithColor(UIColor.redColor())
+                        
+                    }
+                    marker.map = mapView
+                }
+            }
+        default:
+            break
+        }
+        
+        
+    }
+    
 }
 
